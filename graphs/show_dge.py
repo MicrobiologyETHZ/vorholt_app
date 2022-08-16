@@ -24,8 +24,9 @@ def get_volcano_df(results, contrast_col, volcano_contrast, pval_col, ):
     return volcano_df
 
 
-def show_volcano(results, st_col1, st_col2, gene_name='Gene', contrast_col='contrast', lfc_col='log2FoldChange',
-                 pval_col='padj', genes_to_highlight=()):
+def show_volcano(results, st_col1, st_col2, gene_name='Gene',
+                 contrast_col='contrast', lfc_col='log2FoldChange',
+                 pval_col='padj',  genes_to_highlight=(), annotation_col='',):
     st_col1.markdown('### Options')
     contrasts = get_contrasts(results, contrast_col)
     genes = get_genes(results, gene_name)
@@ -36,20 +37,31 @@ def show_volcano(results, st_col1, st_col2, gene_name='Gene', contrast_col='cont
     volcano_df['Hit'] = ((abs(volcano_df[lfc_col]) > lfc_th) & (volcano_df[pval_col] < fdr))
     genes_to_highlight = st_col1.multiselect("Choose gene(s) of interest", genes,
                                              default=genes_to_highlight, key='higenes')
-
+    if annotation_col:
+        volcano_df[annotation_col] = volcano_df[annotation_col].fillna('N/A')
     if genes_to_highlight:
         volcano_df['GOI'] = (volcano_df[gene_name].isin(genes_to_highlight).astype(int) * 50 + 10).astype(float)
         size_max = 25
     else:
         volcano_df['GOI'] = 10
         size_max = 10
+
+    on_hover = {lfc_col: True,
+                pval_col: ':.3f',
+                'log10FDR': False,
+                'Hit': False,
+                'GOI': False,
+                                 }
+    if annotation_col:
+        on_hover[annotation_col] = True
     fig = px.scatter(volcano_df, x=lfc_col, y='log10FDR', color='Hit', size='GOI',
                      height=700, size_max=size_max,
                      title=volcano_contrast,
                      color_discrete_map={False: '#fff9f0',
                                          True: '#378b84'},
                      category_orders={'Hit': [False, True], 'in Pathway': [False, True]},
-                     hover_name=volcano_df[gene_name], hover_data=[lfc_col, pval_col])
+                     hover_name=volcano_df[gene_name],
+                     hover_data=on_hover)
 
 
     fig.add_vline(x=lfc_th, line_width=2, line_dash="dash", line_color="grey")
@@ -80,8 +92,8 @@ def link_to_string(hits_df, st_col, lfc_col='log2FoldChange', gene_name='Gene'):
     else:
         my_genes = list(hits_df.index)
     request_url = "/".join([string_api_url, output_format, method])
-    species = st_col.number_input("NCBI species taxid", value=3702, help='Arabidopsis thaliana: 3702')
-
+    #species = st_col.number_input("NCBI species taxid", value=3702, help='Arabidopsis thaliana: 3702')
+    species = 3702
     params = {
         "identifiers": "\r".join(my_genes),  # your protein
         "species": species,  # species NCBI identifier

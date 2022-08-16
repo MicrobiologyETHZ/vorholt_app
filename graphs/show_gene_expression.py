@@ -4,14 +4,23 @@ import pandas as pd
 import plotly.express as px
 
 
-def show_expression(countData, sampleData, annotation_cols=(), sample_col="sampleID"):
+def show_expression(countData, sampleData, annot_dict={}, sample_col="sampleID"):
     df = countData.copy()
-    if annotation_cols:
-        gene_name = st.radio('Choose gene annotation', annotation_cols)
-        df = df.set_index(gene_name)
+    df.index.name = 'Gene'
+    df = df.reset_index()
+    if annot_dict:
+        gene_name = st.radio('Choose gene annotation', ['TAIR', 'ALIAS'])
     else:
-        df.index.name = 'Gene'
-        gene_name = 'Gene'
+        gene_name = 'TAIR'
+    if gene_name == 'TAIR':
+        gene_options = df['Gene'].unique()
+    else:
+        gene_options = list(annot_dict.keys())
+    genes = st.multiselect("Choose gene(s) of interest", gene_options, key='gois')
+
+    if gene_name == 'ALIAS':
+        genes = set([a for g in genes for a in annot_dict[g]])
+
     df = df.apply(lambda x: np.log2(x + 0.5) if np.issubdtype(x.dtype, np.number) else x)
     sampleDataAb = sampleData.reset_index()
     df = df.reset_index()
@@ -23,8 +32,6 @@ def show_expression(countData, sampleData, annotation_cols=(), sample_col="sampl
     filter_out = c2.selectbox(f'Which category of {filter_by} to keep?',
                                [None] + list(sampleDataAb[filter_by].unique()))
 
-    genes = st.multiselect("Choose gene(s) of interest", df[gene_name].unique(), key='gois')
-
     if 'All' in categories:
         categories = list(sampleDataAb[compare_by].unique())
     if genes:
@@ -33,17 +40,17 @@ def show_expression(countData, sampleData, annotation_cols=(), sample_col="sampl
             st.stop()
         c3, c4 = st.columns(2)
         tpm_label = 'log2 (TPM)'
-        gene_df = df[df[gene_name].isin(genes)]
-
+        gene_df = df[df['Gene'].isin(genes)]
         sample_df = sampleDataAb[sampleDataAb[compare_by].isin(categories)]
+
         if filter_out:
             sample_df = sample_df[sample_df[filter_by] == filter_out]
-        gene_df2 = (gene_df.melt(id_vars=[gene_name], value_name=tpm_label, var_name=sample_col)
+        gene_df2 = (gene_df.melt(id_vars=['Gene'], value_name=tpm_label, var_name=sample_col)
                     .merge(sample_df, how='inner', on=sample_col))
-        groupby = st.radio('Group by', [gene_name, compare_by])
-        color_by = [c for c in [gene_name, compare_by] if c != groupby][0]
+        groupby = st.radio('Group by', ['Gene', compare_by])
+        color_by = [c for c in ['Gene', compare_by] if c != groupby][0]
         fig = px.box(gene_df2, x=groupby, y=tpm_label, color=color_by,
-                     hover_data=[gene_name] + list(sampleData.columns), points='all')
+                     hover_data=['Gene'] + list(sampleData.columns), points='all')
         fig.update_layout({'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'}, autosize=True,
                           font=dict(size=16))
         fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor='LightGrey')

@@ -4,7 +4,7 @@ import pandas as pd
 from google.oauth2 import service_account
 from google.cloud import storage
 from io import StringIO
-
+import json
 
 
 @st.cache
@@ -64,6 +64,21 @@ def load_from_bucket(bucket_name, experiment_name, gene_name):
         results = results.reset_index()
 
     return results, tpms, vsd, sd
+
+
+def load_annotations():
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"]
+    )
+    client = storage.Client(credentials=credentials)
+
+    @st.experimental_memo(ttl=600)
+    def read_file(file_path):
+        bucket = client.bucket('vorholt')
+        content = bucket.blob(file_path).download_as_string().decode("utf-8")
+        return json.loads(content)
+
+    return read_file('alias_to_tair.json')
 
     #pms = read_file(client, bucket_name, tpms_file[0])
     #st.write(tpms.head())
