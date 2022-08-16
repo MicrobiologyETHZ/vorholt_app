@@ -7,7 +7,7 @@ from graphs.show_dge import show_volcano, link_to_string, download_filtered_hits
 from processing.load_data import load_data, load_from_bucket, load_annotations
 from check_password import check_password
 
-datadir = "/Users/ansintsova/polybox/Vorholt/akeppler/22AK07"
+
 page_name = "AK07"
 sample_id = 'Novogene_sample'
 annotation_cols = ()
@@ -20,6 +20,7 @@ def app():
     st.header("PCA")
     with st.expander('Show PCA'):
         show_pca(tpms, sd)
+
     st.header("Expression")
     with st.expander('Show Gene Expression'):
         annotations = load_annotations()

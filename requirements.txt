@@ -5,5 +5,5 @@ scipy == 1.7.3
 streamlit == 1.10.0
 scikit-learn
 pyyaml
-gsheetsdb==0.1.13
 google-cloud-storage==2.4.0
+requests == 2.27.*

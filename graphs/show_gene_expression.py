@@ -1,8 +1,7 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import plotly.express as px
-
+import pandas as pd
 
 def show_expression(countData, sampleData, annot_dict={}, sample_col="sampleID"):
     df = countData.copy()
@@ -56,6 +55,7 @@ def show_expression(countData, sampleData, annot_dict={}, sample_col="sampleID")
         fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor='LightGrey')
         st.plotly_chart(fig, use_container_width=True)
     return genes
+
 
 def show_expression_heatmap():
     pass

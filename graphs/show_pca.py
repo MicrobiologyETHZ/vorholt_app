@@ -2,7 +2,7 @@ import streamlit as st
 from processing import eda
 import plotly.express as px
 import pandas as pd
-st.set_page_config(layout='wide')
+
 
 def show_pca(countData, sampleData):
     c1, c2 = st.columns((4, 1))
