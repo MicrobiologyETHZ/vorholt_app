@@ -38,5 +38,3 @@ def app():
 
 if check_password():
     app()
-
-

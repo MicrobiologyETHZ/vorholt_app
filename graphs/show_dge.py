@@ -5,19 +5,19 @@ import requests
 from time import sleep
 
 
-@st.cache
+@st.cache_data
 def convert_df(df):
     return df.to_csv().encode('utf-8')
 
-@st.cache
+@st.cache_data
 def get_contrasts(results, contrast_col):
     return list(results[contrast_col].unique())
 
-@st.cache
+@st.cache_data
 def get_genes(results, gene_name):
     return list(results[gene_name].unique())
 
-@st.cache
+@st.cache_data
 def get_volcano_df(results, contrast_col, volcano_contrast, pval_col, ):
     volcano_df = results[results[contrast_col] == volcano_contrast].copy()
     volcano_df['log10FDR'] = -10 * np.log10(volcano_df[pval_col])

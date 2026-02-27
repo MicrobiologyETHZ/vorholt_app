@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 
-@st.cache
+@st.cache_data
 def find_PCs(countData, sampleData, numPCs=2, numGenes=None, choose_by='variance'):
     """
     :param countData: each column is a sampleID, index is featureID

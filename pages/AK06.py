@@ -5,7 +5,7 @@ from graphs.show_gene_expression import show_expression
 from graphs.show_dge import show_volcano, link_to_string, download_filtered_hits
 from check_password import check_password
 
-page_name ='AK06'
+page_name = 'AK06'
 
 
 def app():

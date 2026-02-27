@@ -7,7 +7,7 @@ from io import StringIO
 import json
 
 
-@st.cache
+@st.cache_data
 def load_data(datadir, gene_name):
     result_files = list(Path(datadir).glob("*results*csv"))
     tpms = list(Path(datadir).glob("*tpms*csv"))
@@ -36,9 +36,9 @@ def load_from_bucket(bucket_name, experiment_name, gene_name):
     )
     client = storage.Client(credentials=credentials)
 
-    @st.experimental_memo(ttl=600)
-    def read_file(file_path):
-        bucket = client.bucket(bucket_name)
+    @st.cache_data(ttl=600)
+    def read_file(_client, bucket_name, file_path):
+        bucket = _client.bucket(bucket_name)
         content = bucket.blob(file_path).download_as_string().decode("utf-8")
         return pd.read_csv(StringIO(content), sep=',', index_col=0)
 
@@ -48,11 +48,11 @@ def load_from_bucket(bucket_name, experiment_name, gene_name):
     tpms_file = [blob.name for blob in file_blobs if 'tpms.csv' in str(blob) and experiment_name in str(blob)]
     vsd_file = [blob.name for blob in file_blobs if 'vsd.csv' in str(blob) and experiment_name in str(blob)]
     sampleData_file = [blob.name for blob in file_blobs if 'metadata.csv' in str(blob) and experiment_name in str(blob)]
-    tpms = read_file(tpms_file[0]) if tpms_file else pd.DataFrame()
-    vsd = read_file(vsd_file[0]) if vsd_file else pd.DataFrame()
-    sd = read_file(sampleData_file[0]) if sampleData_file else pd.DataFrame()
+    tpms = read_file(client, bucket_name, tpms_file[0]) if tpms_file else pd.DataFrame()
+    vsd = read_file(client, bucket_name, vsd_file[0]) if vsd_file else pd.DataFrame()
+    sd = read_file(client, bucket_name, sampleData_file[0]) if sampleData_file else pd.DataFrame()
 
-    results = pd.concat([read_file(f).assign(contrast=f.split('-')[-1])
+    results = pd.concat([read_file(client, bucket_name, f).assign(contrast=f.split('-')[-1])
                          for f in result_files]) if result_files else pd.DataFrame()
     if not sd.empty:
         sd = sd.astype(str)
@@ -72,13 +72,13 @@ def load_annotations():
     )
     client = storage.Client(credentials=credentials)
 
-    @st.experimental_memo(ttl=600)
-    def read_file(file_path):
-        bucket = client.bucket('vorholt')
+    @st.cache_data(ttl=600)
+    def read_file(_client, file_path):
+        bucket = _client.bucket('vorholt')
         content = bucket.blob(file_path).download_as_string().decode("utf-8")
         return json.loads(content)
 
-    return read_file('alias_to_tair.json')
+    return read_file(client, 'alias_to_tair.json')
 
     #pms = read_file(client, bucket_name, tpms_file[0])
     #st.write(tpms.head())
