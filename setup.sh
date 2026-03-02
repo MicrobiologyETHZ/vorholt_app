@@ -7,4 +7,4 @@ enableCORS = false
 port = $PORT
 EOF
 
-echo "$STREAMLIT_SECRETS" > ~/.streamlit/secrets.toml
+echo "$STREAMLIT_SECRETS_B64" | base64 -d > ~/.streamlit/secrets.toml
